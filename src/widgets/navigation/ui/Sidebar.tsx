@@ -9,6 +9,7 @@ import { StatusBadge } from "@/shared/ui/era/StatusBadge";
 import { getHistoryItems } from "@/entities/history";
 import { cn } from "@/shared/lib/utils";
 import { ReferralPopup } from "@/features/promo";
+import { QueueNavBadge } from "./QueueNavBadge";
 
 interface RecentChat {
   id: string;
@@ -262,6 +263,12 @@ export function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarP
           )}
 
           {renderSection("Инструменты", toolItems)}
+
+          <QueueNavBadge
+            collapsed={collapsed}
+            onNavigate={() => { if (window.innerWidth < 1024) onClose(); }}
+          />
+
           {renderSection("", bottomItems)}
 
           {!collapsed && (

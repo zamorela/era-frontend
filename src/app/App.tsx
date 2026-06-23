@@ -6,7 +6,7 @@ import { OnboardingTour } from "@/features/onboarding";
 import { CopyToastProvider } from "@/features/copy-toast";
 import { DailyCheckIn } from "@/features/promo";
 import { CornerPromo } from "@/features/promo";
-import { QueueProvider, GenerationStatusBar } from "@/features/generation-queue";
+import { QueueProvider } from "@/features/generation-queue";
 
 export default function App() {
   return (
@@ -17,7 +17,6 @@ export default function App() {
             <AppRoutes />
           </ErrorBoundary>
         </Layout>
-        <GenerationStatusBar />
         <OnboardingTour />
         <CopyToastProvider />
         <DailyCheckIn />

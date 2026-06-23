@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowDownUp, ChevronDown, Search } from 'lucide-react'
+import { ChevronDown, Search } from 'lucide-react'
 import { Chip } from '@/shared/ui/era'
 import { Input } from '@/shared/ui/input'
-import { Button } from '@/shared/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
 import { cn } from '@/shared/lib/utils'
-import type { StatusFilter, SortOrder, TypeFilter } from '@/features/generation-queue'
+import type { StatusFilter, SortOrder, TypeFilter } from '../model/queueReducer'
 
 interface QueueToolbarProps {
   filter: StatusFilter
@@ -70,77 +69,72 @@ export function QueueToolbar({
   }, [inputValue, onSearchChange])
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Row 1: status chips + sort + search */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap max-sm:flex-1">
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap flex-1 min-w-0 -mx-1 px-1">
           {STATUS_CHIPS.map((chip) => (
             <Chip
               key={chip.value}
               active={filter === chip.value}
               onClick={() => onFilterChange(chip.value)}
-              className="shrink-0"
+              className="shrink-0 h-8 px-3.5 text-[13px]"
             >
               {chip.label}
             </Chip>
           ))}
         </div>
 
-        <div className="flex items-center gap-2 ml-auto shrink-0">
-          {/* Search */}
-          <div className="relative">
-            <Search
-              size={14}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none"
-            />
-            <Input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Поиск..."
-              className="pl-8 h-7 text-sm w-44 max-sm:w-32 bg-[var(--bg-card)] border-[var(--border-primary)] rounded-full"
-            />
-          </div>
-
-          {/* Sort */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 gap-1.5 text-[var(--text-secondary)] border-[var(--border-primary)]"
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="hidden sm:inline-flex items-center gap-1.5 shrink-0 text-[13px] font-medium text-[var(--text-secondary)] hover:text-foreground transition-colors"
+            >
+              {SORT_LABELS[sort]}
+              <ChevronDown size={14} className="opacity-60" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[180px]">
+            {(Object.keys(SORT_LABELS) as SortOrder[]).map((key) => (
+              <DropdownMenuItem
+                key={key}
+                className={cn(sort === key && 'text-[#E85420]')}
+                onClick={() => onSortChange(key)}
               >
-                <ArrowDownUp size={12} />
-                <span className="max-sm:hidden">{SORT_LABELS[sort]}</span>
-                <ChevronDown size={12} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[180px]">
-              {(Object.keys(SORT_LABELS) as SortOrder[]).map((key) => (
-                <DropdownMenuItem
-                  key={key}
-                  className={cn(sort === key && 'text-[#E85420]')}
-                  onClick={() => onSortChange(key)}
-                >
-                  {SORT_LABELS[key]}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                {SORT_LABELS[key]}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      {/* Row 2: type filter chips (bonus) */}
-      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap">
-        {TYPE_CHIPS.map((chip) => (
-          <Chip
-            key={chip.value}
-            active={typeFilter === chip.value}
-            onClick={() => onTypeFilterChange(chip.value)}
-            className="shrink-0 text-[11px] h-6 px-2.5"
-          >
-            {chip.label}
-          </Chip>
-        ))}
+      {/* Поиск и фильтр по типу — не в desktop-макете, доступны на tablet/mobile */}
+      <div className="flex flex-col gap-2 lg:hidden">
+        <div className="relative max-w-xs">
+          <Search
+            size={14}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none"
+          />
+          <Input
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Поиск..."
+            className="pl-8 h-8 text-sm bg-[var(--bg-card)] border-[var(--border-primary)] rounded-full"
+          />
+        </div>
+
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap md:hidden">
+          {TYPE_CHIPS.map((chip) => (
+            <Chip
+              key={chip.value}
+              active={typeFilter === chip.value}
+              onClick={() => onTypeFilterChange(chip.value)}
+              className="shrink-0 text-[11px] h-7 px-2.5"
+            >
+              {chip.label}
+            </Chip>
+          ))}
+        </div>
       </div>
     </div>
   )

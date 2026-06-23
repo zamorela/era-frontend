@@ -6,7 +6,14 @@ import { queueReducer, initialQueueState } from './queueReducer'
 import type { QueueAction, QueueState, StatusFilter, SortOrder, TypeFilter } from './queueReducer'
 import { startEngine } from './queueEngine'
 import type { QueueEngine } from './queueEngine'
-import { selectStats, selectFiltered, selectActiveCount, selectAvgProgress, selectTopActive } from './selectors'
+import {
+  selectStats,
+  selectFiltered,
+  selectActiveCount,
+  selectAvgProgress,
+  selectTopActive,
+  selectTasksWithPositions,
+} from './selectors'
 import type { QueueStats } from './selectors'
 
 const STORAGE_KEY = 'era2_queue'
@@ -38,7 +45,7 @@ function saveToStorage(tasks: GenerationTask[]) {
 interface QueueContextValue {
   state: QueueState
   dispatch: (action: QueueAction) => void
-  engine: QueueEngine | null
+  retryInit: () => void
   stats: QueueStats
   filter: StatusFilter
   setFilter: (f: StatusFilter) => void
@@ -66,6 +73,8 @@ export function QueueProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(queueReducer, initialQueueState)
   const stateRef = useRef(state)
   const engineRef = useRef<QueueEngine | null>(null)
+  // Increment to trigger a re-init (used by retryInit)
+  const [initKey, setInitKey] = useState(0)
 
   const [filter, setFilter] = useState<StatusFilter>('all')
   const [sort, setSort] = useState<SortOrder>('newest')
@@ -76,18 +85,19 @@ export function QueueProvider({ children }: { children: ReactNode }) {
     stateRef.current = state
   }, [state])
 
-  // Save to localStorage on tasks change
+  // Save to localStorage whenever tasks change
   useEffect(() => {
     if (state.initStatus !== 'ready') return
     saveToStorage(state.tasks)
   }, [state.tasks, state.initStatus])
 
-  // Init: load from storage or seed with 600ms delay
+  // Init / re-init: fires on mount and on retryInit
   useEffect(() => {
+    dispatch({ type: 'RESET_INIT' })
     let cancelled = false
     const timer = setTimeout(() => {
       if (cancelled) return
-      // 5% chance of init error
+      // 5% chance of simulated init error
       if (Math.random() < 0.05) {
         dispatch({ type: 'INIT_ERROR' })
         return
@@ -99,17 +109,18 @@ export function QueueProvider({ children }: { children: ReactNode }) {
       cancelled = true
       clearTimeout(timer)
     }
-  }, [])
+  }, [initKey]) // re-runs when retryInit is called
 
-  // Start engine after init
+  // Start engine after init; clean up on unmount or re-init
   useEffect(() => {
     if (state.initStatus !== 'ready') return
-    const engine = startEngine(dispatch, stateRef)
+    const engine = startEngine(dispatchWithCancel, stateRef)
     engineRef.current = engine
     return () => {
       engine.cleanup()
       engineRef.current = null
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.initStatus])
 
   const dispatchWithCancel = useCallback(
@@ -122,18 +133,22 @@ export function QueueProvider({ children }: { children: ReactNode }) {
     [],
   )
 
-  const stats = selectStats(state.tasks)
-  const filteredTasks = selectFiltered(state.tasks, filter, sort, search, typeFilter)
-  const activeCount = selectActiveCount(state.tasks)
-  const avgProgress = selectAvgProgress(state.tasks)
-  const topActive = selectTopActive(state.tasks)
+  const retryInit = useCallback(() => setInitKey((k) => k + 1), [])
+
+  // Derived: assign live queue positions before filtering/sorting
+  const tasksWithPositions = selectTasksWithPositions(state.tasks)
+  const stats = selectStats(tasksWithPositions)
+  const filteredTasks = selectFiltered(tasksWithPositions, filter, sort, search, typeFilter)
+  const activeCount = selectActiveCount(tasksWithPositions)
+  const avgProgress = selectAvgProgress(tasksWithPositions)
+  const topActive = selectTopActive(tasksWithPositions)
 
   return (
     <QueueContext.Provider
       value={{
         state,
         dispatch: dispatchWithCancel,
-        engine: engineRef.current,
+        retryInit,
         stats,
         filter,
         setFilter,

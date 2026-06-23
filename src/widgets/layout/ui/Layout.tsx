@@ -7,7 +7,7 @@ import { useAuth } from "@/features/auth";
 import { useTheme } from "@/features/theme-switcher";
 import { cn } from "@/shared/lib/utils";
 
-const sidebarPages = ["/text", "/design", "/video", "/audio", "/agents", "/toolkit", "/history", "/pricing", "/create"];
+const sidebarPages = ["/text", "/design", "/video", "/audio", "/agents", "/toolkit", "/history", "/pricing", "/create", "/queue"];
 const workspacePages = ["/text", "/design", "/video", "/audio", "/create"];
 
 export function Layout({ children }: { children: React.ReactNode }) {

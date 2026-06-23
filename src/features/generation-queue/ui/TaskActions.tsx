@@ -1,6 +1,5 @@
 import { Download, MoreHorizontal, RotateCcw, Trash2, X } from 'lucide-react'
 import type { GenerationTask } from '@/entities/generation-task'
-import { Button } from '@/shared/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,55 +16,74 @@ interface TaskActionsProps {
   className?: string
 }
 
+function ActionButton({
+  onClick,
+  label,
+  children,
+  className,
+}: {
+  onClick: () => void
+  label: string
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={cn(
+        'w-8 h-8 flex items-center justify-center rounded-[10px]',
+        'border border-[var(--border-primary)] bg-[var(--bg-secondary)]',
+        'text-[var(--text-secondary)] hover:text-foreground hover:bg-[var(--bg-tag)]',
+        'transition-colors duration-150',
+        className,
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
 export function TaskActions({ task, onCancel, onRetry, onRemove, className }: TaskActionsProps) {
   return (
-    <div className={cn('flex items-center gap-1 shrink-0', className)}>
+    <div className={cn('flex items-center gap-1.5 shrink-0', className)}>
       {(task.status === 'running' || task.status === 'queued') && (
-        <Button
-          variant="quiet"
-          size="icon"
-          className="w-7 h-7 text-[var(--text-tertiary)] hover:text-foreground hover:bg-[var(--bg-tag)]"
-          onClick={() => onCancel(task.id)}
-          aria-label="Отменить задачу"
-        >
+        <ActionButton onClick={() => onCancel(task.id)} label="Отменить задачу">
           <X size={14} />
-        </Button>
+        </ActionButton>
       )}
 
       {(task.status === 'failed' || task.status === 'canceled') && (
-        <Button
-          variant="quiet"
-          size="icon"
-          className="w-7 h-7 text-[var(--text-tertiary)] hover:text-[#E85420] hover:bg-[rgba(232,84,32,0.08)]"
+        <ActionButton
           onClick={() => onRetry(task.id)}
-          aria-label="Повторить задачу"
+          label="Повторить задачу"
+          className="hover:text-[#E85420]"
         >
           <RotateCcw size={14} />
-        </Button>
+        </ActionButton>
       )}
 
       {task.status === 'done' && (
-        <Button
-          variant="quiet"
-          size="icon"
-          className="w-7 h-7 text-[var(--text-tertiary)] hover:text-foreground hover:bg-[var(--bg-tag)]"
-          onClick={() => {}}
-          aria-label="Скачать результат"
-        >
+        <ActionButton onClick={() => {}} label="Скачать результат">
           <Download size={14} />
-        </Button>
+        </ActionButton>
       )}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="quiet"
-            size="icon"
-            className="w-7 h-7 text-[var(--text-tertiary)] hover:text-foreground hover:bg-[var(--bg-tag)]"
+          <button
+            type="button"
             aria-label="Дополнительные действия"
+            className={cn(
+              'w-8 h-8 flex items-center justify-center rounded-[10px]',
+              'border border-[var(--border-primary)] bg-[var(--bg-secondary)]',
+              'text-[var(--text-secondary)] hover:text-foreground hover:bg-[var(--bg-tag)]',
+              'transition-colors duration-150',
+            )}
           >
             <MoreHorizontal size={14} />
-          </Button>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-[140px]">
           <DropdownMenuItem

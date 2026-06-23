@@ -1,6 +1,31 @@
 import { useCallback } from 'react'
 import { toast } from 'sonner'
+import type { GenType } from '@/entities/generation-task'
 import { useQueueContext } from './QueueProvider'
+
+export interface AddTaskParams {
+  prompt: string
+  type: GenType
+  model: string
+  credits: number
+}
+
+export interface EnqueueFromChatParams {
+  text: string
+  modelName: string
+  credits: number
+}
+
+const TEST_PROMPTS: { prompt: string; type: GenType; model: string; credits: number }[] = [
+  { prompt: 'Неоновый город будущего в дождь, кинематографичный стиль', type: 'image', model: 'Midjourney v6', credits: 80 },
+  { prompt: 'Написать рекламный слоган для кофейни в стиле минимализм', type: 'text', model: 'GPT-4o', credits: 4 },
+  { prompt: 'Таймлапс заката над горами, 5 секунд', type: 'video', model: 'Kling 3.0', credits: 150 },
+  { prompt: 'Озвучка персонажа: молодой учёный, нейтральный тон', type: 'audio', model: 'ElevenLabs', credits: 20 },
+  { prompt: 'Логотип для приложения по медитации, flat-стиль', type: 'image', model: 'Flux', credits: 60 },
+  { prompt: 'Краткое эссе о влиянии ИИ на творчество', type: 'text', model: 'Claude 3.5', credits: 6 },
+]
+
+let testCounter = 0
 
 export function useQueue() {
   const ctx = useQueueContext()
@@ -21,24 +46,46 @@ export function useQueue() {
     [dispatch],
   )
 
-  const retryInit = useCallback(() => {
-    // Reset state to loading — trigger a new INIT attempt
-    // We re-dispatch INIT_ERROR → loading is already set; to retry, force a page-level re-mount
-    // Simplest approach: call window.location.reload is too heavy.
-    // Instead: re-init by setting to loading via a fresh INIT
-    const stored = (() => {
-      try {
-        const raw = localStorage.getItem('era2_queue')
-        if (!raw) return null
-        return JSON.parse(raw)
-      } catch {
-        return null
-      }
-    })()
-    import('@/entities/generation-task').then(({ SEED_TASKS }) => {
-      dispatch({ type: 'INIT', tasks: stored ?? SEED_TASKS })
-    })
-  }, [dispatch])
+  const retryInit = useCallback(() => ctx.retryInit(), [ctx])
+
+  const addTask = useCallback(
+    (params: AddTaskParams) => {
+      dispatch({
+        type: 'ADD_TASK',
+        task: {
+          id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          prompt: params.prompt,
+          type: params.type,
+          model: params.model,
+          status: 'queued',
+          progress: 0,
+          createdAt: Date.now(),
+          credits: params.credits,
+        },
+      })
+    },
+    [dispatch],
+  )
+
+  /** Convenience helper: enqueue a text generation originating from the chat page. */
+  const enqueueFromChat = useCallback(
+    (text: string, modelName: string, credits: number) => {
+      addTask({
+        prompt: text.length > 120 ? `${text.slice(0, 120)}…` : text,
+        type: 'text',
+        model: modelName,
+        credits,
+      })
+    },
+    [addTask],
+  )
+
+  const addTestTask = useCallback(() => {
+    if (!import.meta.env.DEV) return
+    const tpl = TEST_PROMPTS[testCounter % TEST_PROMPTS.length]
+    testCounter++
+    addTask(tpl)
+  }, [addTask])
 
   const clearDone = useCallback(() => {
     const snapshot = state.tasks.filter((t) => t.status === 'done')
@@ -74,5 +121,8 @@ export function useQueue() {
     remove,
     clearDone,
     retryInit,
+    addTask,
+    enqueueFromChat,
+    addTestTask,
   }
 }

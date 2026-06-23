@@ -19,6 +19,8 @@ export const initialQueueState: QueueState = {
 export type QueueAction =
   | { type: 'INIT'; tasks: GenerationTask[] }
   | { type: 'INIT_ERROR' }
+  | { type: 'RESET_INIT' }
+  | { type: 'ADD_TASK'; task: GenerationTask }
   | { type: 'START_TASK'; id: string; failAtProgress?: number }
   | { type: 'TICK_PROGRESS'; id: string; delta: number }
   | { type: 'COMPLETE_TASK'; id: string }
@@ -31,7 +33,11 @@ export type QueueAction =
 
 export function queueReducer(state: QueueState, action: QueueAction): QueueState {
   switch (action.type) {
+    case 'RESET_INIT':
+      return { ...state, initStatus: 'loading' }
+
     case 'INIT':
+      // accept only from 'loading' — RESET_INIT must be dispatched first for retries
       if (state.initStatus !== 'loading') return state
       return { ...state, tasks: action.tasks, initStatus: 'ready' }
 
@@ -141,6 +147,9 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
         undoSnapshot: null,
       }
     }
+
+    case 'ADD_TASK':
+      return { ...state, tasks: [action.task, ...state.tasks] }
 
     default:
       return state

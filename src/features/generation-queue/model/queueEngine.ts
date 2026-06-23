@@ -76,7 +76,6 @@ export function startEngine(
       if (newProgress >= 100) {
         clearInterval(timer)
         taskTimers.delete(task.id)
-        dispatch({ type: 'TICK_PROGRESS', id: task.id, delta })
         dispatch({ type: 'COMPLETE_TASK', id: task.id })
         return
       }

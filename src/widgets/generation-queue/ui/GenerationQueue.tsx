@@ -1,16 +1,17 @@
-import { useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Trash2 } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useIsMobile } from '@/shared/hooks/use-mobile'
 import { Button } from '@/shared/ui/button'
-import { useQueue } from '@/features/generation-queue'
-import { QueueStats } from '@/features/generation-queue/ui/QueueStats'
-import { QueueToolbar } from '@/features/generation-queue/ui/QueueToolbar'
-import { TaskRow } from '@/features/generation-queue/ui/TaskRow'
-import { TaskCard } from '@/features/generation-queue/ui/TaskCard'
-import { LoadingState } from '@/features/generation-queue/ui/states/LoadingState'
-import { EmptyState } from '@/features/generation-queue/ui/states/EmptyState'
-import { ErrorState } from '@/features/generation-queue/ui/states/ErrorState'
+import {
+  useQueue,
+  QueueStats,
+  QueueToolbar,
+  TaskRow,
+  TaskCard,
+  LoadingState,
+  EmptyState,
+  ErrorState,
+} from '@/features/generation-queue'
 
 export function GenerationQueue() {
   const isMobile = useIsMobile()
@@ -31,52 +32,53 @@ export function GenerationQueue() {
     remove,
     clearDone,
     retryInit,
+    addTestTask,
   } = useQueue()
-
-  useEffect(() => {
-    document.title = 'ERA2 — Очередь генераций'
-    return () => {
-      document.title = 'ERA2'
-    }
-  }, [])
 
   const hasFilters = filter !== 'all' || typeFilter !== 'all' || search.trim() !== ''
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        {/* Header */}
-        <div className="flex items-start justify-between mb-8 gap-4">
+    <div className="min-h-[calc(100vh-var(--header-height,64px))] bg-background">
+      <div className="max-w-[1120px] mx-auto px-4 pt-5 pb-8 sm:pt-8 sm:pb-12">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 mb-5 sm:mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
+            <h1 className="text-[24px] sm:text-[32px] font-bold text-foreground leading-none tracking-[-0.02em]">
               Очередь генераций
             </h1>
-            <p className="text-sm text-[var(--text-tertiary)] mt-1">
+            <p className="text-[13px] sm:text-sm text-[var(--text-tertiary)] mt-1.5 sm:mt-2">
               Все ваши задачи в реальном времени
             </p>
           </div>
-          {stats.done > 0 && (
+
+          <div className="flex items-center gap-2 shrink-0 self-start">
+            {import.meta.env.DEV && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={addTestTask}
+                className="h-9 px-4 rounded-full text-[13px] font-medium border-dashed border-[var(--border-primary)] bg-transparent text-[var(--text-secondary)] hover:text-foreground hover:bg-[var(--bg-tag)] gap-1.5"
+              >
+                <Plus size={14} />
+                Тест
+              </Button>
+            )}
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              className="shrink-0 gap-1.5 text-[var(--text-secondary)]"
+              disabled={stats.done === 0}
               onClick={clearDone}
+              className="h-8 sm:h-9 px-3 sm:px-4 rounded-full text-[12px] sm:text-[13px] font-medium border-[var(--border-primary)] bg-transparent text-[var(--text-secondary)] hover:text-foreground hover:bg-[var(--bg-tag)]"
             >
-              <Trash2 size={14} />
-              <span className="hidden sm:inline">Очистить готовые</span>
-              <span className="sm:hidden">Очистить</span>
+              Очистить готовые
             </Button>
-          )}
+          </div>
         </div>
 
-        {/* Stats */}
-        <div className="mb-6">
+        <div className="mb-5">
           <QueueStats stats={stats} />
         </div>
 
-        {/* Toolbar */}
-        <div className="mb-4">
+        <div className="mb-5">
           <QueueToolbar
             filter={filter}
             onFilterChange={setFilter}
@@ -89,7 +91,6 @@ export function GenerationQueue() {
           />
         </div>
 
-        {/* Content */}
         {initStatus === 'loading' && <LoadingState />}
 
         {initStatus === 'error' && <ErrorState onRetry={retryInit} />}
@@ -100,7 +101,7 @@ export function GenerationQueue() {
 
         {initStatus === 'ready' && tasks.length > 0 && (
           <AnimatePresence mode="popLayout">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5 sm:gap-2">
               {tasks.map((task) => (
                 <motion.div
                   key={task.id}

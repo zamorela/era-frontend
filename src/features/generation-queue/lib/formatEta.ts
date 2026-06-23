@@ -8,7 +8,7 @@ export function formatEta(ms: number): string {
 }
 
 export function formatCredits(n: number): string {
-  return `${n} кр`
+  return `${n} cr`
 }
 
 export function formatDuration(startedAt: number, completedAt: number): string {

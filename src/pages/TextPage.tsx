@@ -11,6 +11,8 @@ import { ModelCarousel, type CarouselModel } from "@/components/workspace/ModelC
 import { WorkspaceTabs } from "@/components/workspace/WorkspaceTabs";
 import { AssistantsList } from "@/components/text/AssistantsList";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { useQueue, GenerationStatusBar } from "@/features/generation-queue"
+
 
 const textCarouselModels: CarouselModel[] = [
   { name: "ChatGPT", desc: "Универсальный ИИ от OpenAI", gradient: "linear-gradient(135deg, #10a37f, #1a7f5a)", badge: "TOP" },
@@ -104,6 +106,7 @@ const TextPage = () => {
   const subModel = provider.subModels.find((s) => s.id === subModelId) || provider.subModels[0];
   const hasMessages = messages.length > 0;
   const c = useColors();
+  const { enqueueFromChat } = useQueue();
 
   useEffect(() => { document.title = "ERA2 — Текстовые нейросети"; }, []);
   useEffect(() => {
@@ -130,6 +133,9 @@ const TextPage = () => {
   const handleSend = () => {
     const text = input.trim();
     if (!text || isGenerating) return;
+
+    enqueueFromChat(text, `${provider.name} · ${subModel.name}`, subModel.credits);
+
     setMessages((prev) => [...prev, { id: Date.now().toString(), role: "user", content: text }]);
     setInput("");
     sessionStorage.removeItem("era2_draft_text");
@@ -240,7 +246,8 @@ const TextPage = () => {
 
       {/* ─── Input area ─── */}
       <div className="shrink-0 px-3 sm:px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-2 relative z-[1]" style={{ background: c.bg }}>
-        <div className="max-w-[780px] mx-auto">
+        <div className="max-w-[780px] mx-auto relative">
+          <GenerationStatusBar />
           <WorkspaceTabs variant="attached" />
 
           <div className={isGenerating ? "glow-border-active" : "glow-border-idle"}>

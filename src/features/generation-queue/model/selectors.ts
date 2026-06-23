@@ -1,6 +1,22 @@
 import type { GenerationTask, TaskStatus, GenType } from '@/entities/generation-task'
 import type { StatusFilter, SortOrder, TypeFilter } from './queueReducer'
 
+/**
+ * Returns tasks with `queuePosition` recalculated based on current queued order (FIFO).
+ * Should be applied before passing tasks to UI to keep positions always accurate.
+ */
+export function selectTasksWithPositions(tasks: GenerationTask[]): GenerationTask[] {
+  let pos = 0
+  const sorted = [...tasks].sort((a, b) => a.createdAt - b.createdAt)
+  return sorted.map((t) => {
+    if (t.status === 'queued') {
+      pos++
+      return { ...t, queuePosition: pos }
+    }
+    return { ...t, queuePosition: undefined }
+  })
+}
+
 export interface QueueStats {
   queued: number
   running: number

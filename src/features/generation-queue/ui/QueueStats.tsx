@@ -1,4 +1,4 @@
-import type { QueueStats } from '@/features/generation-queue'
+import type { QueueStats } from '../model/selectors'
 import { cn } from '@/shared/lib/utils'
 
 interface QueueStatsProps {
@@ -20,17 +20,17 @@ export function QueueStats({ stats }: QueueStatsProps) {
   ]
 
   return (
-    <div className="grid grid-cols-4 max-sm:grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
       {cards.map((card) => (
         <div
           key={card.label}
-          className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[var(--r-md)] p-4"
+          className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-[14px] px-4 py-3 sm:px-5 sm:py-4"
         >
-          <div className="flex items-center gap-1.5 mb-2">
+          <div className="flex items-center gap-2 mb-2 sm:mb-3">
             <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', card.dotClass)} />
-            <span className="text-xs text-[var(--text-tertiary)] leading-none">{card.label}</span>
+            <span className="text-[12px] sm:text-[13px] text-[var(--text-tertiary)] leading-none">{card.label}</span>
           </div>
-          <span className="font-mono text-3xl font-bold text-foreground tabular-nums leading-none">
+          <span className="font-mono text-[28px] sm:text-[40px] font-bold text-foreground tabular-nums leading-none tracking-tight">
             {card.value}
           </span>
         </div>

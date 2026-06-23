@@ -13,8 +13,10 @@ interface TaskRowProps {
   onRemove: (id: string) => void
 }
 
-function MetaText({ children }: { children: string }) {
-  return <span className="text-xs text-[var(--text-tertiary)] font-mono">{children}</span>
+function MetaLine({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-xs text-[var(--text-tertiary)] font-mono leading-none">{children}</span>
+  )
 }
 
 export function TaskRow({ task, onCancel, onRetry, onRemove }: TaskRowProps) {
@@ -23,62 +25,64 @@ export function TaskRow({ task, onCancel, onRetry, onRemove }: TaskRowProps) {
   return (
     <div
       className={cn(
-        'flex items-center gap-3 px-4 py-3 rounded-[var(--r-md)]',
+        'flex items-center gap-4 px-4 py-3.5 rounded-[14px]',
         'bg-[var(--bg-card)] border border-[var(--border-primary)]',
         'hover:bg-[var(--bg-card-hover)] transition-colors duration-150',
-        'group',
       )}
     >
-      {/* Icon */}
       <TaskTypeIcon type={task.type} />
 
-      {/* Main content */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate leading-snug">{task.prompt}</p>
-        <div className="flex items-center gap-2 mt-1 flex-wrap">
-          <span className="inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded-full bg-[var(--bg-pill)] border border-[var(--border-secondary)] text-[var(--text-secondary)] leading-none">
-            <span className="w-1 h-1 rounded-full bg-[#E85420] shrink-0" />
+        <p className="text-[15px] font-medium text-foreground truncate leading-snug">{task.prompt}</p>
+
+        <div className="flex items-center gap-2 mt-1.5 flex-wrap min-h-[18px]">
+          <span className="inline-flex items-center gap-1.5 text-xs font-mono text-[var(--text-secondary)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#E85420] shrink-0" />
             {task.model}
           </span>
+
           {isRunning && task.startedAt && (
-            <MetaText>{`${formatEta((100 - task.progress) * 300)} · ${formatCredits(task.credits)}`}</MetaText>
+            <MetaLine>{`${formatEta((100 - task.progress) * 300)} · ${formatCredits(task.credits)}`}</MetaLine>
           )}
-          {task.status === 'queued' && task.queuePosition && (
-            <MetaText>{`${formatQueuePosition(task.queuePosition)} · ${formatCredits(task.credits)}`}</MetaText>
+
+          {task.status === 'queued' && (
+            <MetaLine>
+              {task.queuePosition
+                ? `${formatQueuePosition(task.queuePosition)} · ${formatCredits(task.credits)}`
+                : formatCredits(task.credits)}
+            </MetaLine>
           )}
+
           {task.status === 'done' && task.startedAt && task.completedAt && (
-            <MetaText>{`${formatDuration(task.startedAt, task.completedAt)} · ${formatCredits(task.credits)}`}</MetaText>
+            <MetaLine>{`${formatDuration(task.startedAt, task.completedAt)} · ${formatCredits(task.credits)}`}</MetaLine>
           )}
+
           {task.status === 'failed' && task.error && (
-            <span className="text-xs text-[#ef4444]">{task.error}</span>
+            <span className="text-xs font-mono text-[#ef4444]">{task.error}</span>
           )}
+
           {task.status === 'canceled' && (
-            <MetaText>{'отменено пользователем'}</MetaText>
+            <MetaLine>отменено пользователем</MetaLine>
           )}
         </div>
-        {isRunning && (
-          <ProgressBar progress={task.progress} className="mt-2" />
+
+        {isRunning && <ProgressBar progress={task.progress} className="mt-2.5" />}
+      </div>
+
+      <div className="flex flex-col items-end justify-center shrink-0 min-w-[56px]">
+        {isRunning ? (
+          <>
+            <span className="text-lg font-bold font-mono text-[#E85420] tabular-nums leading-none">
+              {task.progress}%
+            </span>
+            <span className="text-xs font-medium text-[#E85420] mt-1">Идёт</span>
+          </>
+        ) : (
+          <QueueStatusBadge status={task.status} />
         )}
       </div>
 
-      {/* Progress % + badge */}
-      <div className="flex items-center gap-3 shrink-0">
-        {isRunning && (
-          <span className="text-sm font-mono font-bold text-[#E85420] tabular-nums w-10 text-right">
-            {task.progress}%
-          </span>
-        )}
-        <QueueStatusBadge status={task.status} />
-      </div>
-
-      {/* Actions */}
-      <TaskActions
-        task={task}
-        onCancel={onCancel}
-        onRetry={onRetry}
-        onRemove={onRemove}
-        className="opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-      />
+      <TaskActions task={task} onCancel={onCancel} onRetry={onRetry} onRemove={onRemove} />
     </div>
   )
 }
