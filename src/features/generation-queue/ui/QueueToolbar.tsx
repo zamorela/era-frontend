@@ -69,7 +69,7 @@ export function QueueToolbar({
   }, [inputValue, onSearchChange])
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3" role="toolbar" aria-label="Фильтры и сортировка очереди">
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap flex-1 min-w-0 -mx-1 px-1">
           {STATUS_CHIPS.map((chip) => (
@@ -119,6 +119,7 @@ export function QueueToolbar({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Поиск..."
+            aria-label="Поиск по промпту"
             className="pl-8 h-8 text-sm bg-[var(--bg-card)] border-[var(--border-primary)] rounded-full"
           />
         </div>

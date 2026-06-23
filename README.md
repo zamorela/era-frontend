@@ -84,6 +84,7 @@ src/
 │  │  ├─ QueueStats.tsx              # 4 счётчика
 │  │  ├─ QueueToolbar.tsx            # фильтры + сортировка + поиск
 │  │  ├─ TaskRow.tsx / TaskCard.tsx  # desktop/mobile вид задачи
+│  │  ├─ TaskList.tsx               # virtual list + DnD + a11y
 │  │  └─ states/                     # loading / empty / error
 │  └─ index.ts                       # весь публичный API слайса
 ├─ widgets/
@@ -101,20 +102,29 @@ src/
 
 ---
 
-## Реализованные бонусы
+## Реализованные бонусы (§6 ТЗ)
 
 | Фича | Описание |
 |------|----------|
-| **Undo** | «Очистить готовые» — sonner toast с кнопкой «Отменить» (5 сек) |
-| **framer-motion** | `AnimatePresence` на строках списка и на status bar |
-| **prefers-reduced-motion** | `motion-safe:transition-*` в `ProgressBar.tsx` |
+| **Юнит-тесты** | Vitest: `queueReducer.test.ts`, `queueEngine.test.ts` — переходы, лимит слотов, undo, reorder |
+| **Optimistic UI + Undo** | Sonner toast с «Отменить» при удалении задачи и «Очистить готовые» (5 сек) |
+| **Виртуализация** | `@tanstack/react-virtual` в `TaskList` при ≥20 задач |
+| **Drag-to-reorder** | HTML5 DnD для `queued`-задач + Alt+↑/↓ с клавиатуры |
+| **Доступность** | `role="list"`, `aria-label`, `aria-grabbed`, `useReducedMotion`, toolbar `role="toolbar"` |
+| **framer-motion** | `AnimatePresence` на строках списка и status bar |
+| **prefers-reduced-motion** | `useReducedMotion` в TaskList/StatusBar; `motion-safe:` в ProgressBar |
+| **Светлая тема** | Переключатель в хедере / профиле (`ThemeProvider`, CSS-переменные) |
 | **Фильтр по типу** | Чипы: Текст / Изображение / Видео / Аудио |
-| **Collapsed status bar** | Chevron сворачивает виджет в pill, клик разворачивает |
-| **aria-label** | На кнопках действий, progress bar (aria-valuenow/min/max), badge |
-| **queuePosition** | Пересчёт позиции в очереди в реальном времени через selector |
-| **enqueueFromChat** | Каждое отправленное в чате сообщение создаёт задачу в очереди |
-| **QueueNavBadge** | Оранжевый live-счётчик активных генераций в сайдбаре |
-| **DEV-only кнопка** | Кнопка «Тест» для добавления задач скрыта в production (`import.meta.env.DEV`) |
+| **Collapsed status bar** | Chevron сворачивает виджет в pill |
+| **queuePosition** | Пересчёт позиции в очереди через selector |
+| **enqueueFromChat** | Сообщения в чате создают задачу в очереди |
+| **QueueNavBadge** | Live-счётчик активных генераций в сайдбаре |
+| **DEV-only кнопка** | «Тест» скрыта в production |
+
+```bash
+npm test          # vitest run
+npm run test:watch
+```
 
 ---
 

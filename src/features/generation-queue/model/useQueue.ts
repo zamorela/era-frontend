@@ -42,7 +42,25 @@ export function useQueue() {
   )
 
   const remove = useCallback(
-    (id: string) => dispatch({ type: 'DELETE_TASK', id }),
+    (id: string) => {
+      const task = state.tasks.find((t) => t.id === id)
+      if (!task) return
+      dispatch({ type: 'DELETE_TASK', id })
+      toast('Задача удалена', {
+        duration: 5000,
+        action: {
+          label: 'Отменить',
+          onClick: () => dispatch({ type: 'RESTORE_TASKS', tasks: [task] }),
+        },
+      })
+    },
+    [dispatch, state.tasks],
+  )
+
+  const reorderQueued = useCallback(
+    (activeId: string, overId: string) => {
+      dispatch({ type: 'REORDER_QUEUED', activeId, overId })
+    },
     [dispatch],
   )
 
@@ -95,7 +113,7 @@ export function useQueue() {
       duration: 5000,
       action: {
         label: 'Отменить',
-        onClick: () => dispatch({ type: 'UNDO_CLEAR_DONE', snapshot }),
+        onClick: () => dispatch({ type: 'RESTORE_TASKS', tasks: snapshot }),
       },
     })
   }, [dispatch, state.tasks])
@@ -119,6 +137,7 @@ export function useQueue() {
     cancel,
     retry,
     remove,
+    reorderQueued,
     clearDone,
     retryInit,
     addTask,

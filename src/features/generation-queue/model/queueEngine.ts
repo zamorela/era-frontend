@@ -4,6 +4,8 @@ import type { QueueAction, QueueState } from './queueReducer'
 
 const MAX_CONCURRENT = 2
 
+export { MAX_CONCURRENT }
+
 const FAIL_ERRORS = [
   'Недостаточно кредитов',
   'Превышено время ожидания',

@@ -29,7 +29,9 @@ export type QueueAction =
   | { type: 'RETRY_TASK'; id: string }
   | { type: 'DELETE_TASK'; id: string }
   | { type: 'CLEAR_DONE' }
+  | { type: 'RESTORE_TASKS'; tasks: GenerationTask[] }
   | { type: 'UNDO_CLEAR_DONE'; snapshot: GenerationTask[] }
+  | { type: 'REORDER_QUEUED'; activeId: string; overId: string }
 
 export function queueReducer(state: QueueState, action: QueueAction): QueueState {
   switch (action.type) {
@@ -140,11 +142,44 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
       }
     }
 
-    case 'UNDO_CLEAR_DONE': {
+    case 'UNDO_CLEAR_DONE':
+      return queueReducer(state, { type: 'RESTORE_TASKS', tasks: action.snapshot })
+
+    case 'RESTORE_TASKS': {
+      const existingIds = new Set(state.tasks.map((t) => t.id))
+      const toRestore = action.tasks.filter((t) => !existingIds.has(t.id))
+      if (toRestore.length === 0) return state
       return {
         ...state,
-        tasks: [...state.tasks, ...action.snapshot].sort((a, b) => a.createdAt - b.createdAt),
+        tasks: [...state.tasks, ...toRestore].sort((a, b) => a.createdAt - b.createdAt),
         undoSnapshot: null,
+      }
+    }
+
+    case 'REORDER_QUEUED': {
+      const { activeId, overId } = action
+      if (activeId === overId) return state
+
+      const queued = state.tasks
+        .filter((t) => t.status === 'queued')
+        .sort((a, b) => a.createdAt - b.createdAt)
+
+      const fromIdx = queued.findIndex((t) => t.id === activeId)
+      const toIdx = queued.findIndex((t) => t.id === overId)
+      if (fromIdx === -1 || toIdx === -1) return state
+
+      const reordered = [...queued]
+      const [moved] = reordered.splice(fromIdx, 1)
+      reordered.splice(toIdx, 0, moved)
+
+      const baseTime = Math.min(...queued.map((t) => t.createdAt))
+      const updated = new Map(
+        reordered.map((t, i) => [t.id, { ...t, createdAt: baseTime + i * 1000 }]),
+      )
+
+      return {
+        ...state,
+        tasks: state.tasks.map((t) => updated.get(t.id) ?? t),
       }
     }
 

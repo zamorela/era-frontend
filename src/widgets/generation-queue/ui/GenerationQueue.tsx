@@ -1,4 +1,3 @@
-import { AnimatePresence, motion } from 'framer-motion'
 import { Plus } from 'lucide-react'
 import { useIsMobile } from '@/shared/hooks/use-mobile'
 import { Button } from '@/shared/ui/button'
@@ -6,8 +5,7 @@ import {
   useQueue,
   QueueStats,
   QueueToolbar,
-  TaskRow,
-  TaskCard,
+  TaskList,
   LoadingState,
   EmptyState,
   ErrorState,
@@ -30,6 +28,7 @@ export function GenerationQueue() {
     cancel,
     retry,
     remove,
+    reorderQueued,
     clearDone,
     retryInit,
     addTestTask,
@@ -100,36 +99,14 @@ export function GenerationQueue() {
         )}
 
         {initStatus === 'ready' && tasks.length > 0 && (
-          <AnimatePresence mode="popLayout">
-            <div className="flex flex-col gap-2.5 sm:gap-2">
-              {tasks.map((task) => (
-                <motion.div
-                  key={task.id}
-                  layout
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -12, height: 0, marginBottom: 0 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
-                >
-                  {isMobile ? (
-                    <TaskCard
-                      task={task}
-                      onCancel={cancel}
-                      onRetry={retry}
-                      onRemove={remove}
-                    />
-                  ) : (
-                    <TaskRow
-                      task={task}
-                      onCancel={cancel}
-                      onRetry={retry}
-                      onRemove={remove}
-                    />
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </AnimatePresence>
+          <TaskList
+            tasks={tasks}
+            isMobile={isMobile}
+            onCancel={cancel}
+            onRetry={retry}
+            onRemove={remove}
+            onReorderQueued={reorderQueued}
+          />
         )}
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ChevronDown, ChevronRight, ChevronUp, Image, Mic, Play, Type } from 'lucide-react'
 import { useNavigate } from '@/shared/routing'
 import { useIsMobile } from '@/shared/hooks/use-mobile'
@@ -56,19 +56,26 @@ export function GenerationStatusBar() {
   const { activeCount, avgProgress, topActive } = useQueue()
   const navigate = useNavigate()
   const isMobile = useIsMobile()
+  const reduceMotion = useReducedMotion()
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   const goToQueue = () => navigate('/queue')
+
+  const motionProps = reduceMotion
+    ? {}
+    : {
+        initial: { opacity: 0, y: 10, scale: 0.98 },
+        animate: { opacity: 1, y: 0, scale: 1 },
+        exit: { opacity: 0, y: 10, scale: 0.98 },
+        transition: { type: 'spring' as const, stiffness: 420, damping: 32 },
+      }
 
   return (
     <AnimatePresence>
       {activeCount > 0 && (
         <motion.div
           key="status-bar"
-          initial={{ opacity: 0, y: 10, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 10, scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+          {...motionProps}
           className={cn(
             'absolute bottom-full z-50 pointer-events-auto',
             'left-0 right-0 mb-2',
