@@ -1,9 +1,9 @@
 import type { GenerationTask } from '@/entities/generation-task'
 import { cn } from '@/shared/lib/utils'
-import { formatCredits, formatDuration, formatEta, formatQueuePosition } from '../lib/formatEta'
 import { ProgressBar } from './ProgressBar'
 import { QueueStatusBadge } from './QueueStatusBadge'
 import { TaskActions } from './TaskActions'
+import { TaskMeta } from './TaskMeta'
 import { TaskTypeIcon } from './TaskTypeIcon'
 
 interface TaskRowProps {
@@ -11,12 +11,6 @@ interface TaskRowProps {
   onCancel: (id: string) => void
   onRetry: (id: string) => void
   onRemove: (id: string) => void
-}
-
-function MetaLine({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="text-xs text-[var(--text-tertiary)] font-mono leading-none">{children}</span>
-  )
 }
 
 export function TaskRow({ task, onCancel, onRetry, onRemove }: TaskRowProps) {
@@ -40,30 +34,7 @@ export function TaskRow({ task, onCancel, onRetry, onRemove }: TaskRowProps) {
             <span className="w-1.5 h-1.5 rounded-full bg-[#E85420] shrink-0" />
             {task.model}
           </span>
-
-          {isRunning && task.startedAt && (
-            <MetaLine>{`${formatEta((100 - task.progress) * 300)} · ${formatCredits(task.credits)}`}</MetaLine>
-          )}
-
-          {task.status === 'queued' && (
-            <MetaLine>
-              {task.queuePosition
-                ? `${formatQueuePosition(task.queuePosition)} · ${formatCredits(task.credits)}`
-                : formatCredits(task.credits)}
-            </MetaLine>
-          )}
-
-          {task.status === 'done' && task.startedAt && task.completedAt && (
-            <MetaLine>{`${formatDuration(task.startedAt, task.completedAt)} · ${formatCredits(task.credits)}`}</MetaLine>
-          )}
-
-          {task.status === 'failed' && task.error && (
-            <span className="text-xs font-mono text-[#ef4444]">{task.error}</span>
-          )}
-
-          {task.status === 'canceled' && (
-            <MetaLine>отменено пользователем</MetaLine>
-          )}
+          <TaskMeta task={task} />
         </div>
 
         {isRunning && <ProgressBar progress={task.progress} className="mt-2.5" />}

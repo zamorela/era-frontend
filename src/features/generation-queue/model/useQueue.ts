@@ -1,18 +1,13 @@
 import { useCallback } from 'react'
 import { toast } from 'sonner'
 import type { GenType } from '@/entities/generation-task'
+import { createTaskId } from '../lib/taskId'
 import { useQueueContext } from './QueueProvider'
 
 export interface AddTaskParams {
   prompt: string
   type: GenType
   model: string
-  credits: number
-}
-
-export interface EnqueueFromChatParams {
-  text: string
-  modelName: string
   credits: number
 }
 
@@ -29,7 +24,7 @@ let testCounter = 0
 
 export function useQueue() {
   const ctx = useQueueContext()
-  const { state, dispatch } = ctx
+  const { state, dispatch, retryInit } = ctx
 
   const cancel = useCallback(
     (id: string) => dispatch({ type: 'CANCEL_TASK', id }),
@@ -45,6 +40,7 @@ export function useQueue() {
     (id: string) => {
       const task = state.tasks.find((t) => t.id === id)
       if (!task) return
+
       dispatch({ type: 'DELETE_TASK', id })
       toast('Задача удалена', {
         duration: 5000,
@@ -64,14 +60,12 @@ export function useQueue() {
     [dispatch],
   )
 
-  const retryInit = useCallback(() => ctx.retryInit(), [ctx])
-
   const addTask = useCallback(
     (params: AddTaskParams) => {
       dispatch({
         type: 'ADD_TASK',
         task: {
-          id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          id: createTaskId(),
           prompt: params.prompt,
           type: params.type,
           model: params.model,
@@ -85,15 +79,10 @@ export function useQueue() {
     [dispatch],
   )
 
-  /** Convenience helper: enqueue a text generation originating from the chat page. */
   const enqueueFromChat = useCallback(
     (text: string, modelName: string, credits: number) => {
-      addTask({
-        prompt: text.length > 120 ? `${text.slice(0, 120)}…` : text,
-        type: 'text',
-        model: modelName,
-        credits,
-      })
+      const prompt = text.length > 120 ? `${text.slice(0, 120)}…` : text
+      addTask({ prompt, type: 'text', model: modelName, credits })
     },
     [addTask],
   )
@@ -101,13 +90,14 @@ export function useQueue() {
   const addTestTask = useCallback(() => {
     if (!import.meta.env.DEV) return
     const tpl = TEST_PROMPTS[testCounter % TEST_PROMPTS.length]
-    testCounter++
+    testCounter += 1
     addTask(tpl)
   }, [addTask])
 
   const clearDone = useCallback(() => {
     const snapshot = state.tasks.filter((t) => t.status === 'done')
     if (snapshot.length === 0) return
+
     dispatch({ type: 'CLEAR_DONE' })
     toast('Готовые задачи удалены', {
       duration: 5000,

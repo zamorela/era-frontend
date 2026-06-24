@@ -1,4 +1,5 @@
 import { Plus } from 'lucide-react'
+import { useMemo } from 'react'
 import { useIsMobile } from '@/shared/hooks/use-mobile'
 import { Button } from '@/shared/ui/button'
 import {
@@ -10,11 +11,13 @@ import {
   EmptyState,
   ErrorState,
 } from '@/features/generation-queue'
+import { selectQueuedInOrder } from '@/features/generation-queue/model/selectors'
 
 export function GenerationQueue() {
   const isMobile = useIsMobile()
   const {
     tasks,
+    allTasks,
     stats,
     initStatus,
     filter,
@@ -35,6 +38,7 @@ export function GenerationQueue() {
   } = useQueue()
 
   const hasFilters = filter !== 'all' || typeFilter !== 'all' || search.trim() !== ''
+  const queuedTasks = useMemo(() => selectQueuedInOrder(allTasks), [allTasks])
 
   return (
     <div className="min-h-[calc(100vh-var(--header-height,64px))] bg-background">
@@ -101,6 +105,7 @@ export function GenerationQueue() {
         {initStatus === 'ready' && tasks.length > 0 && (
           <TaskList
             tasks={tasks}
+            queuedTasks={queuedTasks}
             isMobile={isMobile}
             onCancel={cancel}
             onRetry={retry}

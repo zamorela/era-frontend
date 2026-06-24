@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { GripVertical } from 'lucide-react'
 import type { GenerationTask } from '@/entities/generation-task'
 import { cn } from '@/shared/lib/utils'
+import { findReorderNeighbor } from '../model/selectors'
 import { TaskRow } from './TaskRow'
 import { TaskCard } from './TaskCard'
 
@@ -13,6 +14,8 @@ const ROW_HEIGHT_MOBILE = 160
 
 interface TaskListProps {
   tasks: GenerationTask[]
+  /** Full FIFO queue — used for reorder, unaffected by filters/sort. */
+  queuedTasks: GenerationTask[]
   isMobile: boolean
   onCancel: (id: string) => void
   onRetry: (id: string) => void
@@ -22,6 +25,7 @@ interface TaskListProps {
 
 export function TaskList({
   tasks,
+  queuedTasks,
   isMobile,
   onCancel,
   onRetry,
@@ -85,14 +89,8 @@ export function TaskList({
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
 
     e.preventDefault()
-    const queued = tasks
-      .filter((t) => t.status === 'queued')
-      .sort((a, b) => a.createdAt - b.createdAt)
-    const idx = queued.findIndex((t) => t.id === task.id)
-    if (idx === -1) return
-
-    const target =
-      e.key === 'ArrowUp' ? queued[idx - 1] : queued[idx + 1]
+    const direction = e.key === 'ArrowUp' ? 'up' : 'down'
+    const target = findReorderNeighbor(queuedTasks, task.id, direction)
     if (target) onReorderQueued(task.id, target.id)
   }
 

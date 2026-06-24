@@ -166,7 +166,7 @@ export function queueReducer(state: QueueState, action: QueueAction): QueueState
 
       const fromIdx = queued.findIndex((t) => t.id === activeId)
       const toIdx = queued.findIndex((t) => t.id === overId)
-      if (fromIdx === -1 || toIdx === -1) return state
+      if (fromIdx === -1 || toIdx === -1 || queued.length === 0) return state
 
       const reordered = [...queued]
       const [moved] = reordered.splice(fromIdx, 1)

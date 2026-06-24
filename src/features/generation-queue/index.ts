@@ -1,7 +1,7 @@
 // Model
 export { QueueProvider } from './model/QueueProvider'
 export { useQueue } from './model/useQueue'
-export type { AddTaskParams, EnqueueFromChatParams } from './model/useQueue'
+export type { AddTaskParams } from './model/useQueue'
 export type { QueueStats as QueueStatsData } from './model/selectors'
 export type { StatusFilter, SortOrder, TypeFilter, QueueState, QueueAction } from './model/queueReducer'
 

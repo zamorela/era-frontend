@@ -1,9 +1,9 @@
 import type { GenerationTask } from '@/entities/generation-task'
 import { cn } from '@/shared/lib/utils'
-import { formatCredits, formatDuration, formatEta, formatQueuePosition } from '../lib/formatEta'
 import { ProgressBar } from './ProgressBar'
 import { QueueStatusBadge } from './QueueStatusBadge'
 import { TaskActions } from './TaskActions'
+import { TaskMeta } from './TaskMeta'
 import { TaskTypeIcon } from './TaskTypeIcon'
 
 interface TaskCardProps {
@@ -34,32 +34,15 @@ export function TaskCard({ task, onCancel, onRetry, onRemove }: TaskCardProps) {
               <span className="w-1.5 h-1.5 rounded-full bg-[#E85420] shrink-0" />
               {task.model}
             </span>
-            {isRunning && task.startedAt && (
-              <span className="text-[11px] sm:text-xs font-mono text-[var(--text-tertiary)]">
-                {`${formatEta((100 - task.progress) * 300)} · ${formatCredits(task.credits)}`}
-              </span>
-            )}
-            {task.status === 'queued' && (
-              <span className="text-[11px] sm:text-xs font-mono text-[var(--text-tertiary)]">
-                {task.queuePosition
-                  ? `${formatQueuePosition(task.queuePosition)} · ${formatCredits(task.credits)}`
-                  : formatCredits(task.credits)}
-              </span>
-            )}
-            {task.status === 'done' && task.startedAt && task.completedAt && (
-              <span className="text-[11px] sm:text-xs font-mono text-[var(--text-tertiary)]">
-                {`${formatDuration(task.startedAt, task.completedAt)} · ${formatCredits(task.credits)}`}
-              </span>
-            )}
+            <TaskMeta
+              task={task}
+              className="text-[11px] sm:text-xs font-mono text-[var(--text-tertiary)] leading-none"
+            />
           </div>
         </div>
       </div>
 
       {isRunning && <ProgressBar progress={task.progress} />}
-
-      {task.status === 'failed' && task.error && (
-        <p className="text-[11px] sm:text-xs font-mono text-[#ef4444] -mt-1">{task.error}</p>
-      )}
 
       <div className="flex items-center justify-between gap-2">
         {isRunning ? (
